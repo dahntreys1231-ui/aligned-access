@@ -54,14 +54,14 @@ export default function Results({ diagnosis, onRestart }) {
         <p style={styles.ctaTitle}>Want a second perspective?</p>
         <p style={styles.ctaBody}>
           People often struggle to evaluate situations objectively when
-          they\u2019re emotionally involved. Coaching brings outside
+          they’re emotionally involved. Coaching brings outside
           perspective and accountability to a decision like this one.
         </p>
-        <a href="#" style={styles.ctaBtn}>Explore coaching \u2192</a>
+        <a href="#" style={styles.ctaBtn}>Explore coaching →</a>
       </div>
 
       <button style={styles.restart} onClick={onRestart}>
-        Start over with a different relationship \u2192
+        Start over with a different relationship →
       </button>
     </div>
   );

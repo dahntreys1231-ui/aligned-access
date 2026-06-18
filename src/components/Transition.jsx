@@ -4,12 +4,12 @@ const COPY = {
   reality: {
     title: "Now, the evidence",
     body:
-      "You just mapped the access you\u2019ve granted. Now consider what this person has actually demonstrated \u2014 not what they could become, not who they used to be, but the pattern of evidence itself.",
+      "You just mapped the access you’ve granted. Now consider what this person has actually demonstrated — not what they could become, not who they used to be, but the pattern of evidence itself.",
   },
   align: {
     title: "Two more, then the diagnosis",
     body:
-      "Last stretch \u2014 a couple of reflection questions on reciprocity and consistency, then we\u2019ll compare everything you\u2019ve shared.",
+      "Last stretch — a couple of reflection questions on reciprocity and consistency, then we’ll compare everything you’ve shared.",
   },
 };
 
@@ -21,7 +21,7 @@ export default function Transition({ stage, onNext }) {
       <h2 style={styles.title}>{c.title}</h2>
       <p style={styles.body}>{c.body}</p>
       <button style={styles.cta} onClick={onNext}>
-        Continue \u2192
+        Continue →
       </button>
     </div>
   );

@@ -7,13 +7,13 @@ export default function Hero({ onStart }) {
           What level of access<br />does reality support?
         </h1>
         <p style={styles.sub}>
-          A short, honest diagnostic. Think of one relationship \u2014 a friend, a
-          partner, a colleague \u2014 and walk through what access you\u2019ve
-          granted, what evidence they\u2019ve actually shown, and whether the two
+          A short, honest diagnostic. Think of one relationship — a friend, a
+          partner, a colleague — and walk through what access you’ve
+          granted, what evidence they’ve actually shown, and whether the two
           line up.
         </p>
         <button style={styles.cta} onClick={onStart}>
-          Begin the assessment \u2192
+          Begin the assessment →
         </button>
         <div style={styles.thesis}>
           <ThesisRow text="When access exceeds reality, instability emerges." />

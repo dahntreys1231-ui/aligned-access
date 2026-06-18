@@ -1,10 +1,10 @@
 export const LEVELS = [
-  { name: "Awareness", desc: "\u201cI know of you.\u201d \u2014 access to attention" },
-  { name: "Familiarity", desc: "\u201cI\u2019m learning who you are.\u201d \u2014 access to interaction" },
-  { name: "Trust", desc: "\u201cI am vulnerable with you.\u201d \u2014 access to vulnerability" },
-  { name: "Commitment", desc: "\u201cI invest in you.\u201d \u2014 access to intentional investment" },
-  { name: "Partnership", desc: "\u201cI build with you.\u201d \u2014 access to shared creation" },
-  { name: "Legacy", desc: "\u201cI share my future with you.\u201d \u2014 access to future influence" },
+  { name: "Awareness", desc: "“I know of you.” — access to attention" },
+  { name: "Familiarity", desc: "“I’m learning who you are.” — access to interaction" },
+  { name: "Trust", desc: "“I am vulnerable with you.” — access to vulnerability" },
+  { name: "Commitment", desc: "“I invest in you.” — access to intentional investment" },
+  { name: "Partnership", desc: "“I build with you.” — access to shared creation" },
+  { name: "Legacy", desc: "“I share my future with you.” — access to future influence" },
 ];
 
 export const SCALE_LABELS = ["Not at all", "Slightly", "Somewhat", "Mostly", "Fully"];
@@ -22,14 +22,14 @@ export const REALITY_QUESTIONS = LEVELS.map((l, i) => ({
   stage: "reality",
   label: l.name,
   text: `How much evidence has this person actually demonstrated to earn ${l.name.toLowerCase()}?`,
-  hint: "Evidence \u2014 not potential, not history, not how you feel about them.",
+  hint: "Evidence — not potential, not history, not how you feel about them.",
 }));
 
 export const REFLECTION_QUESTIONS = [
   {
     key: "recip",
     stage: "align",
-    text: "This relationship feels mutual \u2014 contribution flows both ways.",
+    text: "This relationship feels mutual — contribution flows both ways.",
   },
   {
     key: "consist",

@@ -21,9 +21,9 @@ export default function EmailGate({ onSubmit }) {
       <p style={styles.eyebrow}>Your diagnosis is ready</p>
       <h2 style={styles.title}>Where should we send it?</h2>
       <p style={styles.body}>
-        Enter your email to see your full breakdown \u2014 your alignment state,
+        Enter your email to see your full breakdown — your alignment state,
         any distortions at play, and what stewardship looks like from here.
-        We\u2019ll also use it to send occasional guidance on aligning access
+        We’ll also use it to send occasional guidance on aligning access
         with reality.
       </p>
       <input
@@ -38,10 +38,10 @@ export default function EmailGate({ onSubmit }) {
         autoFocus
       />
       {touched && !valid && (
-        <p style={styles.error}>That doesn\u2019t look like a valid email yet.</p>
+        <p style={styles.error}>That doesn’t look like a valid email yet.</p>
       )}
       <button type="submit" style={styles.cta}>
-        Show my diagnosis \u2192
+        Show my diagnosis →
       </button>
       <p style={styles.fine}>No spam. Unsubscribe anytime.</p>
     </form>

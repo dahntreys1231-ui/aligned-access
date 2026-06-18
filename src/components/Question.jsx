@@ -28,14 +28,14 @@ export default function Question({ question, value, onAnswer, onBack, onNext, ca
 
       <div style={styles.nav}>
         <button style={styles.navBtn} onClick={onBack} disabled={!canBack}>
-          \u2190 Back
+          ← Back
         </button>
         <button
           style={{ ...styles.navBtn, ...styles.primary, opacity: value === undefined ? 0.4 : 1 }}
           onClick={onNext}
           disabled={value === undefined}
         >
-          Next \u2192
+          Next →
         </button>
       </div>
     </div>
