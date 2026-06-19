@@ -42,32 +42,34 @@ export default async function handler(req, res) {
     .update(email.toLowerCase())
     .digest("hex");
 
-  const url = `https://${serverPrefix}.api.mailchimp.com/3.0/lists/${listId}/members/${subscriberHash}`;
+  const memberUrl = `https://${serverPrefix}.api.mailchimp.com/3.0/lists/${listId}/members/${subscriberHash}`;
+  const tagsUrl = `${memberUrl}/tags`;
+  const authHeader = `Basic ${Buffer.from(`anystring:${apiKey}`).toString("base64")}`;
 
-  // We only send the short alignment state as both a tag and a merge
-  // field — Mailchimp merge field values are meant for short data (text
-  // fields are capped at 255 bytes and aren't well suited to paragraphs),
-  // and merge tag NAMES are capped at 10 characters. Rather than fight
-  // those limits by squeezing the full stewardship paragraph into a
-  // merge field, the recommended approach is to write three separate,
-  // complete welcome emails inside Mailchimp (one each for Aligned,
-  // Overextended, Restricted) and use this STATE tag to decide which one
-  // a contact receives — see README for the exact automation setup.
-  const body = {
+  // All three possible alignment states. Whichever one applies this time
+  // gets explicitly set to "active"; the other two (if previously set)
+  // get explicitly set to "inactive". This matters because Mailchimp's
+  // "Tag added" automation trigger only fires on the transition from
+  // absent/inactive -> active. Without this cycling, someone retaking the
+  // assessment and landing on the same result as last time (or simply
+  // already having all three tags from repeated testing) would never
+  // re-trigger the email, since the tag would already be "active" and
+  // nothing would actually change.
+  const ALL_STATES = ["Aligned", "Overextended", "Restricted"];
+
+  const memberBody = {
     email_address: email,
     status_if_new: "subscribed",
-    tags: diagnosis?.state ? [diagnosis.state] : undefined,
     merge_fields: diagnosis?.state ? { STATE: diagnosis.state } : undefined,
   };
 
   try {
-    const mcResponse = await fetch(url, {
+    // Step 1: create/update the member (no tags here — handled separately
+    // below so we can reliably force the active/inactive transition).
+    const mcResponse = await fetch(memberUrl, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${Buffer.from(`anystring:${apiKey}`).toString("base64")}`,
-      },
-      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json", Authorization: authHeader },
+      body: JSON.stringify(memberBody),
     });
 
     const data = await mcResponse.json();
@@ -75,6 +77,30 @@ export default async function handler(req, res) {
     if (!mcResponse.ok) {
       console.error("Mailchimp error:", data);
       return res.status(mcResponse.status).json({ error: data.detail || "Mailchimp request failed" });
+    }
+
+    // Step 2: cycle tags so the current result is always a fresh
+    // "added" event, even on repeat submissions.
+    if (diagnosis?.state && ALL_STATES.includes(diagnosis.state)) {
+      const tagsBody = {
+        tags: ALL_STATES.map((state) => ({
+          name: state,
+          status: state === diagnosis.state ? "active" : "inactive",
+        })),
+      };
+
+      const tagsResponse = await fetch(tagsUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: authHeader },
+        body: JSON.stringify(tagsBody),
+      });
+
+      if (!tagsResponse.ok) {
+        const tagsData = await tagsResponse.json().catch(() => ({}));
+        console.error("Mailchimp tags error:", tagsData);
+        // Don't fail the whole request over this — the contact is still
+        // subscribed correctly even if tag-cycling has an issue.
+      }
     }
 
     return res.status(200).json({ success: true });

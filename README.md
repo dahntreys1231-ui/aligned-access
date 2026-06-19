@@ -46,6 +46,23 @@ which adds the email to your Mailchimp audience. It also tags each
 contact with their alignment state (Aligned / Overextended / Restricted),
 so you can later send different follow-ups to each group.
 
+**Repeat submissions:** every time someone completes the assessment,
+`api/subscribe.js` explicitly sets all three state tags — making the
+current result "active" and the other two "inactive." This guarantees a
+genuine tag-added transition every time, even if someone retakes the
+assessment and lands on the same result twice in a row, or has taken it
+before with a different result. This matters because Mailchimp's "Tag
+added" automation trigger only fires on an actual absent/inactive →
+active transition — if the tag were just left "active" from a previous
+submission, re-applying it wouldn't fire anything.
+
+**Important — use "Tag added" as the trigger, not "Signs up for
+Email."** "Signs up for Email" only fires the first time a contact is
+ever added to the audience, so retaking the assessment wouldn't send a
+new result email. Build each of the three automations (Aligned /
+Overextended / Restricted) with the trigger "Tag added," filtered to that
+specific tag name, so it fires every time, not just once per person.
+
 **Why a serverless function and not a direct call from React:** your
 Mailchimp API key has to stay secret. If it were called directly from the
 browser, anyone could open dev tools, find the key, and use it to access
