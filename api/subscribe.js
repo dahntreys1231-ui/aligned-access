@@ -3,18 +3,10 @@ import crypto from "crypto";
 // Vercel serverless function. Lives at /api/subscribe and is called from
 // the frontend via fetch("/api/subscribe", { method: "POST", ... }).
 //
-// The Mailchimp API key NEVER touches the browser — it only exists here,
-// as an environment variable on the server. This is the whole reason this
-// function exists rather than calling Mailchimp directly from React.
-//
-// Required environment variables (set these in your hosting dashboard,
-// not in code):
-//   MAILCHIMP_API_KEY     e.g. "abc123...-us21"  (the "-us21" suffix tells
-//                          you the server prefix used below)
-//   MAILCHIMP_SERVER_PREFIX  e.g. "us21"  (same suffix as above, just the
-//                          part after the dash)
-//   MAILCHIMP_LIST_ID     your Audience/List ID, found in Mailchimp under
-//                          Audience > Settings > Audience name and defaults
+// Required environment variables (set in Vercel dashboard):
+//   MAILCHIMP_API_KEY        e.g. "abc123...-us22"
+//   MAILCHIMP_SERVER_PREFIX  e.g. "us22"
+//   MAILCHIMP_LIST_ID        your Audience/List ID
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -46,15 +38,6 @@ export default async function handler(req, res) {
   const tagsUrl = `${memberUrl}/tags`;
   const authHeader = `Basic ${Buffer.from(`anystring:${apiKey}`).toString("base64")}`;
 
-  // All three possible alignment states. Whichever one applies this time
-  // gets explicitly set to "active"; the other two (if previously set)
-  // get explicitly set to "inactive". This matters because Mailchimp's
-  // "Tag added" automation trigger only fires on the transition from
-  // absent/inactive -> active. Without this cycling, someone retaking the
-  // assessment and landing on the same result as last time (or simply
-  // already having all three tags from repeated testing) would never
-  // re-trigger the email, since the tag would already be "active" and
-  // nothing would actually change.
   const ALL_STATES = ["Aligned", "Overextended", "Restricted"];
 
   const memberBody = {
@@ -64,8 +47,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Step 1: create/update the member (no tags here — handled separately
-    // below so we can reliably force the active/inactive transition).
+    // Step 1: Upsert the contact (tags handled separately below).
     const mcResponse = await fetch(memberUrl, {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: authHeader },
@@ -79,27 +61,40 @@ export default async function handler(req, res) {
       return res.status(mcResponse.status).json({ error: data.detail || "Mailchimp request failed" });
     }
 
-    // Step 2: cycle tags so the current result is always a fresh
-    // "added" event, even on repeat submissions.
+    // Steps 2 + 3: Force a genuine inactive -> active transition for the
+    // current result tag so Mailchimp's "Tag added" automation fires every
+    // time -- including when the same result comes up on a repeat submission.
+    //
+    // TWO separate calls are required:
+    //   2. Set ALL result tags to inactive (clear the slate).
+    //   3. Set only the current result tag to active (fresh addition).
+    //
+    // A single combined call (inactive others + active current) does NOT
+    // reliably re-trigger the automation when the tag was already active,
+    // because Mailchimp only fires on a genuine absent/inactive -> active
+    // transition and won't fire if the tag state didn't actually change.
     if (diagnosis?.state && ALL_STATES.includes(diagnosis.state)) {
-      const tagsBody = {
-        tags: ALL_STATES.map((state) => ({
-          name: state,
-          status: state === diagnosis.state ? "active" : "inactive",
-        })),
-      };
+      // 2. Remove all result tags.
+      await fetch(tagsUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: authHeader },
+        body: JSON.stringify({
+          tags: ALL_STATES.map((state) => ({ name: state, status: "inactive" })),
+        }),
+      });
 
+      // 3. Add the current result tag fresh.
       const tagsResponse = await fetch(tagsUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: authHeader },
-        body: JSON.stringify(tagsBody),
+        body: JSON.stringify({
+          tags: [{ name: diagnosis.state, status: "active" }],
+        }),
       });
 
       if (!tagsResponse.ok) {
         const tagsData = await tagsResponse.json().catch(() => ({}));
         console.error("Mailchimp tags error:", tagsData);
-        // Don't fail the whole request over this — the contact is still
-        // subscribed correctly even if tag-cycling has an issue.
       }
     }
 
